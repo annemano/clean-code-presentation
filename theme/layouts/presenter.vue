@@ -41,6 +41,7 @@ const props = defineProps({
     type: String,
   },
 })
+
 const firstImageUrl = computed(() => resolveAssetUrl(props.firstPresenterImage))
 const secondImageUrl = computed(() => resolveAssetUrl(props.secondPresenterImage))
 </script>
