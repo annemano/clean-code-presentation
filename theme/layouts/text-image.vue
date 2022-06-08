@@ -32,5 +32,7 @@ const props = defineProps({
     type: String,
   },
 })
+
 const mediaUrl = computed(() => resolveAssetUrl(props.media))
+
 </script>
