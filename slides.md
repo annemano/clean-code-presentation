@@ -20,7 +20,8 @@ themeConfig:
 </div>
 
 <!--
-The last comment block of each slide will be treated as slide notes. It will be visible and editable in Presenter Mode along with the slide. [Read more in the docs](https://sli.dev/guide/syntax.html#notes)
+
+This presentation is about a philosophy we follow at Kumojin, or aspire to follow as much as possible, in our design discussions & code reviews.
 -->
 
 ---
@@ -32,25 +33,37 @@ secondPresenterImage: ./avatar.jpg
 # Who are we?
 ::first::
 ### Lukasz Kokot
-Chief Technological Officer & Senior Cloud Developer at Kumojin
+Co-Founder, Chief Technological Officer & Senior Cloud Developer at Kumojin
 
 ::second::
 ### Anne-Marie Nault
-Fullstack Developer at Kumojin & Le Wagon Montréal alumnus
+Full Stack Developer at Kumojin & Le Wagon Montréal alumna
+
+---
+layout: text-image
+media: /clean_code.jpg
+---
+
+# What is Clean Code?
+> Even bad code can function. But if code isn’t clean, it can bring a development organization to its knees
+
+- Philosophy best summed up in this handbook by **Robert C. Martin, aka "Uncle Bob"**
+- Principles, patterns, and practices of writing readable, scalable and testable code
+- **SOLID, DRY, KISS, Law of Demeter** and **YAGNI** are some of these principles
 
 ---
 layout: new-section
-image: /intro_invader.jpg
 ---
 
 # SOLID
-The First 5 Principles of Object Oriented Design Explained
+The First 5 Principles of Object Oriented Design
 
 
 <!--
-- Principles defined by Robert C. Martin (Uncle Bob) in 2000
-- Acronym introduced by Michael Feathers
+- Acronym - each letter refers to a different principle
 - Apply to any object-oriented design but also software component or microservices
+- We'll go through each principle with examples, using an imaginary Space Invaders game
+
 -->
 
 ---
@@ -66,6 +79,14 @@ media: /single_responsibility_principle.jpg
 - Less risk to break unrelated code
 - Ask yourself: what is the responsibility of my component?
 
+<!--
+- Your class should have only one purpose
+
+- When you have a change to make, it should very clear which class is impacted
+
+- You should not be worried that you will break other unrelated code when making that change
+-->
+
 ---
 
 # Single Responsibility Principle
@@ -74,17 +95,20 @@ media: /single_responsibility_principle.jpg
 ```mermaid
 classDiagram
   class Invader {
-      +health()
+      +heal()
       +move()
       +render()
   }
 ```
 
 Several reasons to change:
-- change the logic that calculate the health
-- move a different way
-- change the rendering
+- change the logic on how an invader heals itself
+- move the invader in different ways
+- change the rendering service
 
+<!--
+This code does work, but you have to think that your program will grow, needs will change, and your code needs to be scalable.
+-->
 ---
 
 # Single Responsibility Principle
@@ -95,7 +119,7 @@ classDiagram
   Invader <|-- InvaderMover
   Invader <|-- InvaderRenderer
   class Invader {
-      +health()
+      +heal()
   }
   class InvaderMover {
       +move(Invader)
@@ -105,7 +129,11 @@ classDiagram
   }
 ```
 
-Single reason for `Invader` to change: logic that calculates the health
+Single reason for `Invader` to change: logic that handles the healing process
+
+<!--
+heal() is related to the Invader itself, what it knows about itself and can actually control
+-->
 
 ---
 layout: text-image
@@ -116,13 +144,10 @@ media: /openclosed_principle.jpg
 
 > Software entities [...] should be open for extension, but closed for modification.
 
-<mdi-alert /> OCP is **not** about
 
-- locking down your class by using the correct modifiers
+- You must expect that your project will change over time as new needs arise
 
-OCP is about:
-- programming to the superclass/interface
-- ensuring that we always refer to abstraction and not concrete implementation
+- You should be able to change/add behavior without having to change the entity itself
 
 ---
 layout: text-window
@@ -141,14 +166,20 @@ class InvaderAttack
 
   def main_loop
     invaders.each do |invader|
-      SimpleInvaderMover.new.move(invader);
-      OpenGlInvaderRenderer.new.render(invader);
+      InvaderMover.new.move(invader)
+      InvaderRenderer.new.render(invader)
     end
   end
 end
-
-InvaderAttack.new([Invader.new])
 ```
+
+<!--
+Let's say I have a class that handles an attack, and there's a main loop. I use the InvaderMover to move and InvaderRenderer to render, because
+that's all I have in my code right now.
+
+Do you foresee which problems we might encounter?
+-->
+
 ---
 layout: text-window
 ---
@@ -156,8 +187,8 @@ layout: text-window
 # Open/Closed Principle
 ### Example: OCP broken
 
-- Depending on concrete implementation of `SimpleInvaderMover` and `OpenGlInvaderRenderer`
-- If we need to change them, we need to change `InvaderAttack` directly
+- Depending on concrete implementation of `InvaderMover` and `InvaderRenderer`
+- If we need to change them, have different ways to move and render, we need to change `InvaderAttack` directly
 
 ::window::
 ```ruby{10-11}
@@ -170,16 +201,14 @@ class InvaderAttack
 
   def main_loop
     invaders.each do |invader|
-      SimpleInvaderMover.new.move(invader);
-      OpenGlInvaderRenderer.new.render(invader);
+      InvaderMover.new.move(invader)
+      InvaderRenderer.new.render(invader)
     end
   end
 end
-
-InvaderAttack.new([Invader.new])
 ```
 <!--
-Invader Attack shouldn't know about SimpleInvaderMover and OpenGLInvaderRenderer. It currently depends on them directly. What if we want to have more than one option for movers and renderers?
+Invader Attack shouldn't know about InvaderMover and InvaderRenderer. It currently depends on them directly. What if we want to have more than one option for movers and renderers?
 -->
 
 ---
@@ -219,7 +248,7 @@ classDiagram
 ```
 
 <!--
-We now have new options for movers and renderers, and these classes inherit from the parent classes Mover and Renderer, which have a move() and render() methods respectively. You can further specify their own move() and render() methods.
+First, we need new options for movers and renderers, and these classes inherit from a parent class. You can overwrite the methods where you need them to be different
 -->
 
 ---
@@ -252,7 +281,9 @@ class InvaderAttack
 end
 ```
 <!--
-Here, InvaderAttack takes a mover and renderer, but it doesn't know about their specific implementation, other than they have a move() or render() method. We'll see this example again with Dependency Inversion Principle
+InvaderAttack now takes a mover and renderer in its initialize method, but it doesn't know about their specific implementation, other than they have a move() or render() method. We'll see this example again with Dependency Inversion Principle (D)
+
+Note that it remains a bit risky with Ruby, because it doesn't check if the mover and renderer that you pass in the initialize method is of the right type. If you pass it another object which doesn't move or render, you will get an error. This is something that typed languages, like Typescript, would support you with.
 -->
 
 ---
@@ -311,10 +342,10 @@ layout: text-2cols
     Missile <|-- GuidedMissile
     Invader <|-- DiveBomber
     class Invader {
-        +Missile checkCollision()
+        +Missile attack()
     }
     class DiveBomber {
-        +GuidedMissile checkCollision()
+        +GuidedMissile attack()
     }
 ```
 
@@ -335,7 +366,7 @@ class OpenGlException < RuntimeException; end
 
 class InvaderAttack
   def draw
-      raise GraphicsException.new
+    raise GraphicsException.new
   end
 end
 
@@ -360,7 +391,7 @@ class OpenGlException < GraphicsException; end
 
 class InvaderAttack
   def draw
-      raise GraphicsException.new
+    raise GraphicsException.new
   end
 end
 
@@ -430,7 +461,7 @@ class Invader
   end
 end
 
-class DiveBomber < Invader {
+class DiveBomber < Invader
   def check_collision(missile)
     if missile.active?
       missile.intersects(self) ? missile : nil
@@ -438,7 +469,6 @@ class DiveBomber < Invader {
       nil
     end
   end
-}
 ```
 
 ---
@@ -451,7 +481,7 @@ layout: text-window
 - Any invariants guaranteed by a superclass must also be guaranteed by its subclass
 
 ::window::
-```ruby{8,14}
+```ruby{1,3,4,8,9,14,16}
 class InvaderAttack
   def initialize(max_invaders)
     @max_invaders = max_invaders;
@@ -459,11 +489,13 @@ class InvaderAttack
   end
 
   def add(invader)
-    @invaders << invader if invaders.size < @max_invaders
+    if invaders.size < @max_invaders
+      @invaders << invader
+    end
   end
 end
 
-class SuperInvaderAttack < InvaderAttack {
+class SuperInvaderAttack < InvaderAttack
   def add(invader)
     @invaders << invader
   end
@@ -480,7 +512,7 @@ layout: text-window
 - Constraints adhered to by a superclass must be adhered to by its subclasses.
 
 ::window::
-```ruby
+```ruby{2,9,10}
 class Invader
   attr_reader :strength
 
@@ -491,7 +523,7 @@ end
 
 class DiveBomber < Invader 
   def set_strength(strength)
-    @strength = strength;
+    @strength = strength
   end
 end
 ```
@@ -516,7 +548,7 @@ layout: text-window
 
 ::window::
 ```ruby
-class Invader
+class InvaderAttack
   def bomb(target, swoop)
     target.destroy
     puts "*swoop swoop*" if swoop
@@ -524,14 +556,18 @@ class Invader
 end
 
 class Bomber
-  def attack
-    Invader.new.bomb(user, false)
+  ...
+
+  def attack(target)
+    invader_attack.bomb(target, false)
   end
 end
 
 class Swooper
-  def attack
-    Invader.new.bomb(user, true)
+  ...
+
+  def attack(target)
+    invader_attack.bomb(target, true)
   end
 end
 ```
@@ -548,7 +584,7 @@ layout: text-window
 ### Example: ISP fixed
 
 ::window::
-```ruby
+```ruby{1,6,7,8,19,23,24}
 class InvaderAttack
   def bomb(target)
     target.destroy
@@ -559,16 +595,20 @@ class InvaderAttack
   end
 end
 
-class Swooper
-  def attack
-    invader.bomb(user)
-    invader.swoop
+class Bomber
+  ...
+
+  def attack(target)
+    invader_attack.bomb(target)
   end
+end
 
-  private
+class Swooper
+ ...
 
-  def invader
-    InvaderAttack.new
+  def attack(target)
+    invader_attack.bomb(target)
+    invader_attack.swoop
   end
 end
 ```
@@ -585,6 +625,15 @@ media: /dependency_inversion_principle.jpg
 - Closely tied to Open/Closed Principle
 - DIP enables OCP
 
+<!--
+
+Any class that has a single responsibility needs things from other classes to work, but it shouldn't be dependent on their specific implementation.
+
+A high-level module should not depend on a low-level module, especially that the low-level module has more chance to change more often than the high-level.
+
+Both should depend on abstraction.
+-->
+
 ---
 layout: text-window
 ---
@@ -593,18 +642,56 @@ layout: text-window
 ### Example
 
 - We use Inversion of Control (IOC) to inject concrete implementations
-- You can either do it manually or use Dependency Injection Frameworks
+- You can either do it manually or use [Dependency Injection Frameworks](https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection)
 
 ::window::
-```ruby{18,19,20,21,22}
+```ruby{11,12,13,15}
 class InvaderAttack
-  attr_reader :invaders, :mover, :renderer
-
   def initialize(invaders, mover, renderer)
     @invaders = invaders
     @mover = mover
     @renderer = renderer
   end
+
+  ...
+end
+
+invaders = [Invader.new('small'), Invader.new('medium')]
+mover = SimpleInvaderMover.new
+renderer = DirectXInvaderRenderer.new
+
+InvaderAttack.new(invaders, mover, renderer)
+```
+
+<!--
+Coming back to the example we talked about in the Open Closed principle, we see here how we instantiate the invaders, mover and renderer outside the InvaderAttack class
+
+You don't have this in Ruby, but in other languages (Spring with Java, C# with .NET), you can do Dependency Injection, which we won't cover here
+-->
+
+---
+layout: new-section
+---
+
+# DRY
+Don't repeat yourself
+
+---
+layout: text-window
+---
+
+# Don't Repeat Yourself
+>Every piece of knowledge must have a single, unambiguous, authoritative representation within a system
+
+- Repeated code is harder to maintain and scale
+- Very likely to encounter errors if a change in logic is needed
+- You should extract common logic into their own methods/functions
+
+::window::
+```ruby
+# REPEATED CODE
+class InvaderAttack
+ ...
 
   def main_loop
     invaders.each do |invader|
@@ -612,30 +699,274 @@ class InvaderAttack
       renderer.render(invader)
     end
   end
+
+  def special_loop
+    invaders.each do |invader|
+      invader.heal(10)
+      mover.move(invader)
+      renderer.render(invader)
+    end
+  end
+end
+```
+
+---
+layout: text-window
+---
+
+# Don't Repeat Yourself
+>Every piece of knowledge must have a single, unambiguous, authoritative representation within a system
+
+- Repeated code is harder to maintain and scale
+- Very likely to encounter errors if a change in logic is needed
+- You should extract common logic into their own methods/functions
+
+::window::
+```ruby
+# REFACTORED
+class InvaderAttack
+ ...
+
+  def main_loop
+    invaders.each do |invader|
+      basic_attack(invader)
+    end
+  end
+
+  def special_loop
+    invaders.each do |invader|
+      invader.heal(10)
+      basic_attack(invader)
+    end
+  end
+
+  private
+
+  def basic_attack(invader)
+    mover.move(invader)
+    renderer.render(invader)
+  end
+end
+```
+
+---
+layout: new-section
+---
+
+# KISS
+Keep it simple stupid
+
+---
+layout: text-window
+---
+
+# Keep it simple
+>Any fool can write code that a computer can understand. Good programmers write code that humans can understand
+
+- Code should be easy to understand and easy to maintain
+- Divide your lengthy methods into short, simple pieces of logic
+- Your code shouldn't need comments to explain what it does!
+- Linters (like Rubocop for Ruby) will often warn you based on some metrics
+
+::window::
+```ruby
+## Cyclomatic Complexity is too high!
+
+def customer_order
+  if customer_id.present? && !order_id.present?
+    render_error :not_found, 'Invalid customer id' \
+    unless @info.customer_id == customer_id
+  elsif order_id.present? && !customer_id.present?
+    render_error :not_found, 'Invalid order id' \
+    unless @info.order_id == order_id
+  elsif customer_id.present? && order_id.present?
+    render_error :not_found, 'Invalid info' \
+      unless @info.customer_id == customer_id &&
+              @info.order_id == order_id
+  end
+end
+```
+
+---
+layout: text-window
+---
+
+# Keep it simple
+
+### First refactor:
+- Extract conditions in their own simple methods
+- Use clear names for your methods
+
+
+::window::
+```ruby
+
+def customer_id_only?
+  customer_id.present? && order_id.blank?
 end
 
-InvaderAttack.new(
-  [Invader.new],
-  SimpleInvaderMover.new,
-  DirectXInvaderRenderer.new
-  )
+def order_id_only?
+  order_id.present? && customer_id.blank?
+end
+
+def customer_id_valid?
+  @info.customer_id == customer_id
+end
+
+def order_id_valid?
+  @info.order_id == order_id
+end
+
+def full_order_info?
+  customer_id.present? && order_id.present?
+end
+
+def full_order_info_valid?
+  customer_id_valid? && order_id_valid?
+end
+```
+
+---
+layout: text-window
+---
+
+# Keep it simple
+
+### First refactor (cont'd):
+- Avoid nesting conditional statements
+
+Now that it's easier to read, you can ask yourself: 
+
+*"Am I missing anything? Does it do what I need?"*
+
+
+::window::
+```ruby
+
+def customer_order
+  if customer_id_only? && !customer_id_valid?
+    render_error :not_found, 'Invalid customer id'
+  elsif order_id_only? && !order_id_valid?
+    render_error :not_found, 'Invalid order id'
+  elsif full_order_info? && !full_order_info_valid?
+    render_error :not_found, 'Invalid info'
+  end
+end
+```
+
+---
+layout: new-section
+---
+# Law of Demeter
+
+---
+layout: text-window
+---
+
+# Law of Demeter
+### Principle of least knowledge
+
+- Keep software entities independent of each other
+- Reduce the communication or coupling between different classes - "don't talk to strangers"
+- Put related classes in the same package, module or directory to achieve cohesion
+
+::window::
+```ruby
+class Game < ActiveRecord::Base
+  belongs_to :user
+end
+
+class User < ActiveRecord::Base
+  has_many :games
+
+  validates :email, presence: true
+end
+
+invader_game.user.email
+
+# ⚠️WARNING⚠️ 
+# INSTANCE OF GAME IS CALLING EMAIL VIA USER
 ```
 
 <!--
-Coming back to the example we talked about in the Open Closed principle, we see here how we instantiate the mover and renderer outside the InvaderAttack class
+The instance of game shouldn't know that user can call 'email'. Especially if later on, 'user' changes and 'email' as well, you would need to change it
+everywhere you called it.
 -->
+
+---
+layout: text-window
+---
+
+# Law of Demeter
+### Principle of least knowledge
+
+- Keep software entities independent of each other
+- Reduce the communication or coupling between different classes - "don't talk to strangers"
+- Put related classes in the same package, module or directory to achieve cohesion
+
+::window::
+```ruby
+class Game < ActiveRecord::Base
+  belongs_to :user
+  
+  def user_email
+    user&.email
+  end
+end
+
+invader_game.user_email
+```
+
+<!--
+You might not always be able to follow this law to the dot, but it's good to know about the risks and make an informed decision
+-->
+
+---
+layout: new-section
+---
+
+# YAGNI
+You ain't gonna need it
+
+---
+layout: text-image
+media: /yagni.png
+---
+
+# You ain't gonna need it
+
+- Implement features only **when you do need it**
+- Avoid having to **maintain code** that is not being used, and might never be
+- Also in line with the **Agile Methodology**
+
+<!--
+Do not code features just because you know how to do it (for example, don't code all CRUD actions at once if you don't need them all)
+
+Do expect your code to change in the future and make sure it will be **easy to change**, but you can't predict what **exact changes** will be needed.
+
+Thankfully, by following all the previous principles, you are making sure that when you DO need a feature, it's easy to implement in your existing code.
+-->
+
+---
+layout: new-section
+---
+
+# Craftsmanship
+There are two parts to learning craftsmanship: **knowledge** and **work**.
+
+*You must gain the knowledge of principles, patterns, practices, and heuristics that a craftsman knows, and you must also grind that knowledge into your fingers, eyes, and gut by working hard and practicing.*
+
+-- Robert C. Martin
 
 ---
 layout: default
 ---
 
 # Learn more
-
+- [Clean Code: 100+ pieces of timeless advice](https://dev.to/thawkin3/in-defense-of-clean-code-100-pieces-of-timeless-advice-from-uncle-bob-5flk)
+- [Practical Object-Oriented Design - An Agile Primer Using Ruby (Sandi Metz)](https://www.poodr.com/)
 - [SOLID Software Principles in Practice](https://www.jkspad.com/solid/solid/)
-- [Single Responsibility Principe (PDF)](https://web.archive.org/web/20150202200348/http://www.objectmentor.com/resources/articles/srp.pdf)
-- [Open/Closed Principle (PDF)](https://web.archive.org/web/20150905081105/http://www.objectmentor.com/resources/articles/ocp.pdf)
-- [Liskov Substitution Principle (PDF)](https://web.archive.org/web/20150905081111/http://www.objectmentor.com/resources/articles/lsp.pdf)
-- [Interface Segregation Principle (PDF)](https://web.archive.org/web/20150905081110/http://www.objectmentor.com/resources/articles/isp.pdf)
-- [Dependency Inversion Principle (PDF)](https://web.archive.org/web/20150905081103/http://www.objectmentor.com/resources/articles/dip.pdf)
+- [SOLID Principles applied to Ruby](http://rubyblog.pro/2017/05/solid-single-responsibility-principle-by-example)
+
 
 ---
