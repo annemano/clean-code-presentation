@@ -7,7 +7,7 @@ on:
         description: 'Add new version tag to commit'
         type: choice
         options:
-          - Major
+          - (git rev-parse HEAD)
           - Minor
           - Patch
         required: true
