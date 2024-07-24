@@ -8,8 +8,7 @@ on:
         type: choice
         options:
           - $(git rev-parse HEAD)
-          - Minor
-          - Patch
+          - autre
         required: true
 
 concurrency:
