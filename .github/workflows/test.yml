@@ -1,0 +1,23 @@
+name: Go build and test CLI TEST
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'semantic version tag'
+        type: string
+        required: true
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: '1.22.x'
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Testing manual workflow"
+        run: echo "Currently testing manual workflow..."
