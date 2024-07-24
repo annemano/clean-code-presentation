@@ -4,8 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'semantic version tag'
-        type: string
+        description: 'Add new version tag to commit'
+        type: choice
+        options:
+          - Major
+          - Minor
+          - Patch
         required: true
 
 concurrency:
