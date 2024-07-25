@@ -2,25 +2,34 @@ name: Go build and test CLI TEST
 
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Add new version tag to commit'
-        type: choice
-        options:
-          - ${{ github.event.after }}
-          - autre
-        required: true
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  GO_VERSION: '1.22.x'
 
 jobs:
-  prepare-release:
+  select-commit:
     runs-on: ubuntu-latest
     steps:
-      - name: "Testing manual workflow"
-        run: echo "Currently testing manual workflow..."
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Fetch Commits
+        id: fetch-commits
+        run: |
+          COMMITS=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ github.repository }}/commits?per_page=5)
+          echo "$COMMITS" > commits.json
+
+      - name: Display Commits
+        id: display-commits
+        run: |
+          COMMITS=$(cat commits.json)
+          echo "Recent commits:"
+          echo "$COMMITS" | jq -r '.[] | "\(.sha) - \(.commit.message)"'
+          # Optionally: Save these commit messages into an output variable or a file
+
+      - name: Select Commit
+        id: select-commit
+        run: |
+          read -p "Enter the commit SHA to proceed: " COMMIT_SHA
+          echo "::set-output name=commit_sha::$COMMIT_SHA"
+
+      - name: Use Selected Commit
+        run: |
+          echo "You selected commit: ${{ steps.select-commit.outputs.commit_sha }}"
