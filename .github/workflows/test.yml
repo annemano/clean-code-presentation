@@ -9,8 +9,13 @@ on:
         options:
           - major
           - minor
+                version:
+                description: 'Select last major release'
+                type: string
           - patch
-        # add dynamic list of latest commits to choose from
+                version:
+                description: 'Select release'
+                type: string
         required: true
       commit_sha:
         description: 'Select commit to release'
