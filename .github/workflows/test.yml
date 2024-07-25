@@ -44,7 +44,7 @@ jobs:
       - name: Get latest tag
         id: get_latest_tag
         run: |
-          LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1) 2>/dev/null || echo "v0.0.0")
+          LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
           echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
 
       - name: Calculate new version
