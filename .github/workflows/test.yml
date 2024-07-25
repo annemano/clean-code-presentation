@@ -86,24 +86,9 @@ jobs:
               script: |
                 const newVersion = process.env.new_version;
                 const commitSha = process.env.commit_sha;
-                console.log(`Creating tag ${newVersion} on commit ${commitSha}`);
-                try {
-                  const { data: refData } = await github.git.listMatchingRefs({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    ref: `tags/${commitSha}`
-                  });
-                  console.log(`Refs matching commit SHA: ${JSON.stringify(refData)}`);
-                } catch (error) {
-                  console.error(`Error listing refs: ${error}`);
-                }
-
-                await github.rest.git.createRef({
+                github.rest.git.createRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   ref: `refs/tags/${newVersion}`,
                   sha: commitSha,
-                }).catch(error => {
-                  console.error(error);
-                  throw error;
                 });
