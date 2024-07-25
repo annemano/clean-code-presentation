@@ -97,8 +97,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Create new tag
+      - name: Create tag "release"
         run:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const newVersion = "release";
             const commitSha = const commitSha = process.env.commit_sha;;
