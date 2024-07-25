@@ -17,31 +17,71 @@ on:
         type: string
 
 jobs:
-  tag:
+  create_tag:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    
-    - name: Determine commit SHA
-      id: get_commit
-      run: |
-        if [ -z "${{ github.event.inputs.commit_sha }}" ]; then
-          LATEST_COMMIT=$(git rev-parse HEAD)
-          echo "commit_sha=${LATEST_COMMIT}" >> $GITHUB_ENV
-        else
-          echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
-        fi
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Bump version and push tag
-      uses: paulhatch/semantic-version@v5.4.0
-      with:
-        # The prefix to use to identify tags
-        tag_prefix: "v"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        default: ${{ github.event.inputs.release_type }}
-        commit: ${{ github.event.inputs.commit_sha }}
-        major: 'major'
-        minor: 'minor'
-        patch: 'patch'
+      - name: Determine commit SHA
+        id: get_commit
+        run: |
+          if [ -z "${{ github.event.inputs.commit_sha }}" ]; then
+            LATEST_COMMIT=$(git rev-parse HEAD)
+            echo "commit_sha=${LATEST_COMMIT}" >> $GITHUB_ENV
+          else
+            echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
+          fi
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
+
+      - name: Calculate new version
+        id: calculate_version
+        run: |
+          echo "Current version: ${{ env.latest_tag }}"
+          version=${{ env.latest_tag }}
+          version=${version#v} # Remove leading 'v' if present
+          major=$(echo $version | cut -d. -f1)
+          minor=$(echo $version | cut -d. -f2)
+          patch=$(echo $version | cut -d. -f3)
+          
+          case ${{ github.event.inputs.release_type }} in
+            major)
+              new_major=$((major + 1))
+              new_version="v${new_major}.0.0"
+              ;;
+            minor)
+              new_minor=$((minor + 1))
+              new_version="v${major}.${new_minor}.0"
+              ;;
+            patch)
+              new_patch=$((patch + 1))
+              new_version="v${major}.${minor}.${new_patch}"
+              ;;
+            *)
+              echo "Invalid release type"
+              exit 1
+          esac
+          
+          echo "new_version=${new_version}" >> $GITHUB_ENV
+          echo "New version: $new_version"
+
+      - name: Create new tag
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const newVersion = process.env.new_version;
+            const commitSha = process.env.commit_sha;
+            await github.git.createRef({
+              owner,
+              repo,
+              ref: `refs/tags/${newVersion}`,
+              sha: commitSha,
+            });
