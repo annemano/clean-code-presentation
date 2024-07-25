@@ -29,6 +29,7 @@ test1
 layout: presenter
 firstPresenterImage: ./lukasz_avatar.jpg
 secondPresenterImage: ./avatar.jpg
+test2
 ---
 ::title::
 # Who are we?
