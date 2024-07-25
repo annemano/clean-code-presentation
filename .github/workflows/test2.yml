@@ -2,8 +2,7 @@ name: Go build and test when a tag
 
 on:
   create:
-  tags:
-    -'*'
+    tags:
 
 jobs:
   create_realease:
