@@ -14,7 +14,9 @@ on:
       commit_sha:
         description: 'Select commit to release'
         type: string
-
+      version:
+        description: 'Select a release (Format : x.x.x)'
+        type: string
 
 jobs:
   create_tag:
@@ -39,12 +41,12 @@ jobs:
       - name: Get latest tag
         id: get_latest_tag
         run: |
-        if [ -z "${{ github.event.inputs.version }}" ]; then
-          LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
-          echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
-        else
-          echo "latest_tag=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-        fi
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
+            echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
+          else
+            echo "latest_tag=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          fi
 
       - name: Calculate new version
         id: calculate_version
