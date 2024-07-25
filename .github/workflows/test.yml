@@ -3,22 +3,18 @@ name: Go build and test CLI TEST
 on:
   workflow_dispatch:
     inputs:
-      release_type:
-        description: 'Select release type'
+      choice-input:
+        description: 'Choose an option'
+        required: true
         type: choice
         options:
-          - major
-          - minor
-                version:
-                description: 'Select last major release'
-                type: string
-          - patch
-                version:
-                description: 'Select release'
-                type: string
-        required: true
+          - option1
+          - option2
       commit_sha:
         description: 'Select commit to release'
+        type: string
+      version:
+        description: 'Select release'
         type: string
 
 jobs:
