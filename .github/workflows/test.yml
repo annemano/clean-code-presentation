@@ -3,25 +3,45 @@ name: Go build and test CLI TEST
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Add new version tag to commit'
+      release_type:
+        description: 'Select release type'
         type: choice
         options:
-          - Major
-          - Minor
-          - Patch
+          - major
+          - minor
+          - patch
+        # add dynamic list of latest commits to choose from
         required: true
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  GO_VERSION: '1.22.x'
+      commit_sha:
+        description: 'Select commit to release'
+        type: string
 
 jobs:
-  prepare-release:
+  tag:
     runs-on: ubuntu-latest
+
     steps:
-      - name: "Testing manual workflow"
-        run: echo "Currently testing manual workflow..."
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Determine commit SHA
+      id: get_commit
+      run: |
+        if [ -z "${{ github.event.inputs.commit_sha }}" ]; then
+          LATEST_COMMIT=$(git rev-parse HEAD)
+          echo "commit_sha=${LATEST_COMMIT}" >> $GITHUB_ENV
+        else
+          echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
+        fi
+
+    - name: Bump version and push tag
+      uses: paulhatch/semantic-version@v5.4.0
+      with:
+        # The prefix to use to identify tags
+        tag_prefix: "v"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        default: ${{ github.event.inputs.release_type }}
+        commit: ${{ github.event.inputs.commit_sha }}
+        major: 'major'
+        minor: 'minor'
+        patch: 'patch'
