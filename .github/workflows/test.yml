@@ -97,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Create tag "release"
+      - name: Create tag release
         run:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
