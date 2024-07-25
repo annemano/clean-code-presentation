@@ -3,30 +3,54 @@ name: Go build and test CLI TEST
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'put one commit hash'
-        type: string
+      release_type:
+        description: 'Select release type'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        # add dynamic list of latest commits to choose from
         required: true
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  GO_VERSION: '1.22.x'
+      commit_sha:
+        description: 'Select commit to release'
+        type: string
 
 jobs:
-  prepare-release:
+  create_tag:
     runs-on: ubuntu-latest
-    steps:
-      - name: "Testing manual workflow"
-        run: |
-          TAG=${{ github.event.inputs.tag }} >> $GITHUB_ENV
-          echo 
-      - name: "Create Git tag"
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git tag -a "$TAG" -m "Tagging version $TAG"
-          git push origin "$TAG"
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Determine commit SHA
+        id: get_commit
+        run: |
+          if [ -z "${{ github.event.inputs.commit_sha }}" ]; then
+            LATEST_COMMIT=$(git rev-parse HEAD)
+            echo "commit_sha=${LATEST_COMMIT}" >> $GITHUB_ENV
+          else
+            echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
+          fi
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
+
+      - name: Create new tag
+        uses: actions/github-script@v6
+        with:
+              github-token: ${{ secrets.GITHUB_TOKEN }}
+              script: |
+                const newVersion = 10.10.10;
+                const commitSha = process.env.commit_sha;
+                github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `refs/tags/${newVersion}`,
+                  sha: commitSha,
+                });
+#hotfix
