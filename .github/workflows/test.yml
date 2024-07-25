@@ -14,9 +14,7 @@ on:
       commit_sha:
         description: 'Select commit to release'
         type: string
-      version:
-        description: 'Select a release (Format : x.x.x)'
-        type: string
+
 
 jobs:
   create_tag:
