@@ -91,3 +91,21 @@ jobs:
                   ref: `refs/tags/${newVersion}`,
                   sha: commitSha,
                 });
+
+  create_realease:
+    needs: create_tag
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create new tag
+        run:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const newVersion = "release";
+            const commitSha = const commitSha = process.env.commit_sha;;
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${newVersion}`,
+              sha: commitSha,
+            });
