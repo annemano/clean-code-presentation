@@ -16,13 +16,17 @@ on:
         description: 'Select commit to release'
         type: string
 
+permissions: write-all
+
 jobs:
   create_tag:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Determine commit SHA
         id: get_commit
@@ -37,16 +41,50 @@ jobs:
       - name: Get latest tag
         id: get_latest_tag
         run: |
-          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
+          LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
           echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
+
+      - name: Calculate new version
+        id: calculate_version
+        run: |
+          echo "Current version: ${{ env.latest_tag }}"
+          version=${{ env.latest_tag }}
+          version=${version#v} # Remove leading 'v' if present
+          major=$(echo $version | cut -d. -f1)
+          minor=$(echo $version | cut -d. -f2)
+          patch=$(echo $version | cut -d. -f3)
+          
+          case ${{ github.event.inputs.release_type }} in
+            major)
+              new_major=$((major + 1))
+              new_version="v${new_major}.0.0"
+              ;;
+            minor)
+              new_minor=$((minor + 1))
+              new_version="v${major}.${new_minor}.0"
+              ;;
+            patch)
+              new_patch=$((patch + 1))
+              new_version="v${major}.${minor}.${new_patch}"
+              ;;
+            *)
+              echo "Invalid release type"
+              exit 1
+          esac
+          
+          echo "new_version=${new_version}" >> $GITHUB_ENV
+          echo "New version: $new_version"
 
       - name: Create new tag
         uses: actions/github-script@v6
         with:
-          script: |
-            const newVersion = '10.10.10';
-            const commitSha = process.env.commit_sha;
-
-            curl -H "Authorization: ${{ secrets.GITHUB_TOKEN }} \
-                 -data "{\"ref\":\"refs/tags/${TAG_NAME}\",\"sha\":\"${COMMIT_SHA}\"}"\
-                 https://api.github.com/repos/${{ github.repository }}/git/refs
+              github-token: ${{ secrets.GITHUB_TOKEN }}
+              script: |
+                const newVersion = process.env.new_version;
+                const commitSha = process.env.commit_sha;
+                github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `refs/tags/${newVersion}`,
+                  sha: commitSha,
+                });
