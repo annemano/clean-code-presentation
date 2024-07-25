@@ -43,7 +43,6 @@ jobs:
       - name: Create new tag
         uses: actions/github-script@v6
         with:
-              github-token: ${{ secrets.GITHUB_TOKEN }}
               script: |
                 const newVersion = '10.10.10';
                 const commitSha = process.env.commit_sha;
@@ -53,4 +52,7 @@ jobs:
                   ref: `refs/tags/${newVersion}`,
                   sha: commitSha,
                 });
+              env :
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+
 #hotfix
