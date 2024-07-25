@@ -74,6 +74,11 @@ jobs:
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "New version: $new_version"
 
+      - name: Print environment variables
+        run: |
+          echo "Commit SHA: ${{ env.commit_sha }}"
+          echo "New Version: ${{ env.new_version }}"
+          git log --oneline | grep ${{ env.commit_sha }}
       - name: Create new tag
         uses: actions/github-script@v6
         with:
@@ -81,9 +86,24 @@ jobs:
               script: |
                 const newVersion = process.env.new_version;
                 const commitSha = process.env.commit_sha;
-                github.rest.git.createRef({
+                console.log(`Creating tag ${newVersion} on commit ${commitSha}`);
+                try {
+                  const { data: refData } = await github.git.listMatchingRefs({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: `tags/${commitSha}`
+                  });
+                  console.log(`Refs matching commit SHA: ${JSON.stringify(refData)}`);
+                } catch (error) {
+                  console.error(`Error listing refs: ${error}`);
+                }
+
+                await github.rest.git.createRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   ref: `refs/tags/${newVersion}`,
                   sha: commitSha,
+                }).catch(error => {
+                  console.error(error);
+                  throw error;
                 });
