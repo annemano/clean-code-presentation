@@ -74,14 +74,14 @@ jobs:
       - name: Create new tag
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { owner, repo } = context.repo;
-            const newVersion = process.env.new_version;
-            const commitSha = process.env.commit_sha;
-            await github.git.createRef({
-              owner,
-              repo,
-              ref: `refs/tags/${newVersion}`,
-              sha: commitSha,
-            });
+              github-token: ${{ secrets.GITHUB_TOKEN }}
+              script: |
+                const { context, github } = require('@actions/github');
+                const newVersion = process.env.new_version;
+                const commitSha = process.env.commit_sha;
+                github.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `refs/tags/${newVersion}`,
+                  sha: commitSha,
+                });
