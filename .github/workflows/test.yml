@@ -47,6 +47,6 @@ jobs:
             const newVersion = '10.10.10';
             const commitSha = process.env.commit_sha;
 
-            curl -H 'Authorization: ${{ secrets.GITHUB_TOKEN }}' \
-                 -data '{"ref":"refs/tags/${TAG_NAME}","sha":"${COMMIT_SHA}"}'\
+            curl -H "Authorization: ${{ secrets.GITHUB_TOKEN }} \
+                 -data "{\"ref\":\"refs/tags/${TAG_NAME}\",\"sha\":\"${COMMIT_SHA}\"}"\
                  https://api.github.com/repos/${{ github.repository }}/git/refs
