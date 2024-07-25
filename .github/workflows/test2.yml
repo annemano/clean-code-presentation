@@ -11,15 +11,14 @@ jobs:
 
     steps:
       - name: Create new tag
-        uses: actions/github-script@v6
-        with:
-              github-token: ${{ secrets.GITHUB_TOKEN }}
-              script: |
-                const newVersion = "release";
-                const commitSha = $(git rev-parse HEAD);
-                github.rest.git.createRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: `refs/tags/${newVersion}`,
-                  sha: commitSha,
-                });
+        run:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const newVersion = "release";
+            const commitSha = $(git rev-parse HEAD);
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${newVersion}`,
+              sha: commitSha,
+            });
