@@ -76,10 +76,9 @@ jobs:
         with:
               github-token: ${{ secrets.GITHUB_TOKEN }}
               script: |
-                const { context, github } = require('@actions/github');
                 const newVersion = process.env.new_version;
                 const commitSha = process.env.commit_sha;
-                github.git.createRef({
+                github.rest.git.createRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   ref: `refs/tags/${newVersion}`,
