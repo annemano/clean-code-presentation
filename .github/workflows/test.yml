@@ -22,6 +22,7 @@ permissions:
 jobs:
   create_tag:
     runs-on: ubuntu-latest
+    permissions: write-all
 
     steps:
       - name: Checkout repository
