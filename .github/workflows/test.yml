@@ -48,7 +48,5 @@ jobs:
             const commitSha = process.env.commit_sha;
 
             curl --location 'https://api.github.com/repos/${{ github.repository }}/git/refs' \
-                --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
-                --data '{\"ref\": \"refs/tags/${TAG_NAME}\", \"sha\": \"${COMMIT_SHA}\"}' \
-                
-          #hotfix
+                --header 'Authorization: ${{ secrets.GITHUB_TOKEN }}' \
+                --data '{"ref":"refs/tags/${TAG_NAME}","sha":"${COMMIT_SHA}"}'
