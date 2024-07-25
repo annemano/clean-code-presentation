@@ -16,8 +16,6 @@ on:
         description: 'Select commit to release'
         type: string
 
-permissions: write-all
-
 jobs:
   create_tag:
     runs-on: ubuntu-latest
