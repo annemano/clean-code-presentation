@@ -46,9 +46,7 @@ jobs:
           script: |
             const newVersion = '10.10.10';
             const commitSha = process.env.commit_sha;
-            
-            curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-        -d "{\"ref\": \"refs/tags/${newVersion}\", \"sha\": \"${commitSha}\"}" \
-        https://api.github.com/repos/${{ github.repository }}/git/refs
+
+            curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \ -d "{\"ref\": \"refs/tags/${newVersion}\", \"sha\": \"${commitSha}\"}" \https://api.github.com/repos/${{ github.repository }}/git/refs
 
 #hotfix
