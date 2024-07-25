@@ -3,18 +3,19 @@ name: Go build and test CLI TEST
 on:
   workflow_dispatch:
     inputs:
-      choice-input:
-        description: 'Choose an option'
-        required: true
+      release_type:
+        description: 'Select release type'
         type: choice
         options:
-          - option1
-          - option2
+          - major
+          - minor
+          - patch
+        required: true
       commit_sha:
         description: 'Select commit to release'
         type: string
       version:
-        description: 'Select release'
+        description: 'Select a release (Format : x.x.x)'
         type: string
 
 jobs:
@@ -40,8 +41,12 @@ jobs:
       - name: Get latest tag
         id: get_latest_tag
         run: |
+        if [ -z "${{ github.event.inputs.version }}" ]; then
           LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
           echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
+        else
+          echo "latest_tag=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+        fi
 
       - name: Calculate new version
         id: calculate_version
@@ -73,7 +78,6 @@ jobs:
           
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "New version: $new_version"
-
       - name: Create new tag
         uses: actions/github-script@v6
         with:
