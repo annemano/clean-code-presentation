@@ -3,6 +3,7 @@ name: Go build and test when a tag
 on:
   create:
     tags:
+      -'*'
 
 jobs:
   create_realease:
