@@ -1,7 +1,7 @@
 name: Go build and test when a tag
 
 on:
-  create:
+  push:
     tags:
       -'*'
 
