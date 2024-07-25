@@ -46,7 +46,7 @@ jobs:
           script: |
             const newVersion = '10.10.10';
             const commitSha = process.env.commit_sha;
-            github.rest.git.createRef({
+            await github.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `refs/tags/${newVersion}`,
