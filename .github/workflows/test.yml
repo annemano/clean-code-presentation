@@ -95,7 +95,7 @@ jobs:
       - name: Share SHA
         id: share
         run: |       
-              echo "commit_sha=$new_version" >> $GITHUB_OUTPUT
+              echo "commit_sha=$commit_sha" >> $GITHUB_OUTPUT
   create_realease:
     needs: create_tag
     runs-on: ubuntu-latest
