@@ -92,6 +92,7 @@ jobs:
                   sha: commitSha,
                 });
       - name: Share SHA
+        id: share
         run: |       
               echo "::set-output name=commit_sha::process.env.commit_sha"
   create_realease:
@@ -105,7 +106,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const newVersion = "release";
-            const commitSha = ${{ create_tag.outputs.commit_sha}};
+            const commitSha = ${{ steps.share.outputs.commit_sha}};
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
