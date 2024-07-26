@@ -101,13 +101,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: get commit sha
+        run: |
+              echo "commit_sha=${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
       - name: Create tag release
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const newVersion = "release";
-            const commitSha = ${{ needs.create_tag.outputs.commit_sha}};
+            const commitSha = process.env.commit_sha;
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
