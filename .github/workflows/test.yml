@@ -119,7 +119,7 @@ jobs:
             echo "commit_sha=${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
       - uses: actions/checkout@v4
         with:
-          ref: $commit_sha
+          ref: ${{ env.COMMIT_SHA }}
   #     - uses: actions/setup-go@v5
   #       with:
   #         go-version: ${{ env.GO_VERSION }}
