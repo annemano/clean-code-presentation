@@ -94,6 +94,7 @@ jobs:
       - name: Share SHA
         id: share
         run: |       
+              echo process.env.commit_sha
               echo "::set-output name=commit_sha::process.env.commit_sha"
   create_realease:
     needs: create_tag
