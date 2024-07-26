@@ -116,22 +116,10 @@ jobs:
       - name: get commit sha
         run: |
             echo "commit_sha=${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
-      - name: Create tag release
-        uses: actions/github-script@v6
+
+      - uses: actions/checkout@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const newVersion = "release";
-            const commitSha = process.env.commit_sha;
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/tags/${newVersion}`,
-              sha: commitSha,
-            });
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         ref: $commit_sha
+          ref: $commit_sha
   #     - uses: actions/setup-go@v5
   #       with:
   #         go-version: ${{ env.GO_VERSION }}
