@@ -22,7 +22,7 @@ jobs:
   create_tag:
     runs-on: ubuntu-latest
     outputs:
-      my_output: ${{ steps.share.outputs.commit_sha }}
+      commit_sha: ${{ steps.share.outputs.commit_sha }}
 
     steps:
       - name: Checkout repository
