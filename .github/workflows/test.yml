@@ -106,7 +106,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const newVersion = "release";
-            const commitSha = ${{ create_tag.share.outputs.commit_sha}};
+            const commitSha = ${{ needs.create_tag.outputs.commit_sha}};
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
