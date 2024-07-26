@@ -109,38 +109,32 @@ jobs:
         run: |       
               echo "commit_sha=$commit_sha" >> $GITHUB_OUTPUT
 
-  create_realease:
-    needs: create_tag
-    runs-on: ubuntu-latest
-
-    steps:
-
-
+#code from paren (create-and-upload-executables.yml)              
   create-executables:
     runs-on: ubuntu-latest
     steps:
-        - name: get commit sha
+      - name: get commit sha
         run: |
-              echo "commit_sha=${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
-        - name: Create tag release
-          uses: actions/github-script@v6
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            script: |
-              const newVersion = "release";
-              const commitSha = process.env.commit_sha;
-              github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/tags/${newVersion}`,
-                sha: commitSha,
-              });
-        - uses: actions/checkout@v4
-          with:
-            ref: $commit_sha
-        - uses: actions/setup-go@v5
-          with:
-            go-version: ${{ env.GO_VERSION }}
+            echo "commit_sha=${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
+      - name: Create tag release
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const newVersion = "release";
+            const commitSha = process.env.commit_sha;
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${newVersion}`,
+              sha: commitSha,
+            });
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         ref: $commit_sha
+  #     - uses: actions/setup-go@v5
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
 
   #       - name: Create executables for each provider
   #         run: ./tools/build/create-executables.sh pkg/providers ${{ env.OUTPUT_PATH }}/getters
