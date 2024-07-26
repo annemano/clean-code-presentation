@@ -106,7 +106,7 @@ jobs:
       - name: get commit sha
         run: |
               echo "commit_sha= ${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
-              printenv.commit_sha
+              printenv
       - name: Create tag release
         uses: actions/github-script@v6
         with:
