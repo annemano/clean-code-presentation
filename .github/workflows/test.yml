@@ -21,6 +21,8 @@ on:
 jobs:
   create_tag:
     runs-on: ubuntu-latest
+    outputs:
+      my_output: ${{ steps.share.outputs.commit_sha }}
 
     steps:
       - name: Checkout repository
@@ -103,8 +105,8 @@ jobs:
     steps:
       - name: get commit sha
         run: |
-              echo "commit_sha=test" >> $GITHUB_ENV
-              printenv
+              echo "commit_sha= ${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
+              printenv.commit_sha
       - name: Create tag release
         uses: actions/github-script@v6
         with:
