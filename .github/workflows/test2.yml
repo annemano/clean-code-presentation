@@ -1,0 +1,22 @@
+name: Create Executables TEST
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  handle_tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Print Tag Information
+        run: |
+          echo "New tag: $GITHUB_REF"
+          echo "Tag pushed to commit SHA: $GITHUB_SHA"
+
+      - name: Example Action Step
+        run: echo "This step runs when a new tag is pushed"

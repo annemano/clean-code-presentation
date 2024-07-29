@@ -4,19 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Select release type'
+        description: 'Release type'
         type: choice
         options:
           - major
           - minor
           - patch
-        # add dynamic list of latest commits to choose from
         required: true
       commit_sha:
-        description: 'Select commit to release'
+        description: 'Commit SHA to tag (default: latest commit)'
         type: string
-
-permissions: write-all
+      base_tag:
+        description: 'Base tag to bump from (default: highest tag, format : x.x.x)'
+        type: string
 
 jobs:
   create_tag:
@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -38,22 +38,26 @@ jobs:
             echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
           fi
 
-      - name: Get latest tag
-        id: get_latest_tag
+      - name: Get base tag
+        id: get_base_tag
         run: |
-          LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
-          echo "latest_tag=${LATEST_TAG}" >> $GITHUB_ENV
+          if [ -z "${{ github.event.inputs.base_tag }}" ]; then
+            LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
+            echo "base_tag=${LATEST_TAG}" >> $GITHUB_ENV
+          else
+            echo "base_tag=${{ github.event.inputs.base_tag }}" >> $GITHUB_ENV
+          fi
 
       - name: Calculate new version
         id: calculate_version
         run: |
-          echo "Current version: ${{ env.latest_tag }}"
-          version=${{ env.latest_tag }}
+          echo "Current version: ${{ env.base_tag }}"
+          version=${{ env.base_tag }}
           version=${version#v} # Remove leading 'v' if present
           major=$(echo $version | cut -d. -f1)
           minor=$(echo $version | cut -d. -f2)
           patch=$(echo $version | cut -d. -f3)
-          
+
           case ${{ github.event.inputs.release_type }} in
             major)
               new_major=$((major + 1))
@@ -71,7 +75,7 @@ jobs:
               echo "Invalid release type"
               exit 1
           esac
-          
+
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "New version: $new_version"
 
