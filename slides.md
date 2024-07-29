@@ -25,11 +25,9 @@ This presentation is about a philosophy we follow at Kumojin, or aspire to follo
 -->
 
 ---
-test1
 layout: presenter
 firstPresenterImage: ./lukasz_avatar.jpg
 secondPresenterImage: ./avatar.jpg
-test2
 ---
 ::title::
 # Who are we?
