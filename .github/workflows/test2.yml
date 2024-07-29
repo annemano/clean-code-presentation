@@ -11,12 +11,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Print Tag Information
         run: |
-          echo "New tag: $GITHUB_REF"
-          echo "Tag pushed to commit SHA: $GITHUB_SHA"
+          if [ -z "${{ github.event.inputs.base_tag }}" ]; then
+            LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
+            echo "base_tag=${LATEST_TAG}" >> $GITHUB_ENV
+          else
+            echo "base_tag=${{ github.event.inputs.base_tag }}" >> $GITHUB_ENV
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.base_tag }}
 
       - name: Example Action Step
-        run: echo "This step runs when a new tag is pushed"
+        run: echo "This step runs when a new tag is pushed ${{ github.event.inputs.base_tag }}"
