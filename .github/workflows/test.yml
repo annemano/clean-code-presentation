@@ -125,5 +125,4 @@ jobs:
           uses: softprops/action-gh-release@v2
           with:
             prerelease: true
-            fromTag: ${{ needs.create_tag.outputs.base_tag }}
-            toTag: ${{ needs.create_tag.outputs.new_version }}
+            tag_name: ${{ needs.create_tag.outputs.new_version }}
