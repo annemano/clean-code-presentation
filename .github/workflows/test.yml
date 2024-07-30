@@ -64,22 +64,23 @@ jobs:
 
           case ${{ github.event.inputs.release_type }} in
             major)
-              new_major=$((major + 1))
-              new_version="v${new_major}.0.0"
+              major=$((major + 1))
+              minor=0
+              patch=0
               ;;
             minor)
-              new_minor=$((minor + 1))
-              new_version="v${major}.${new_minor}.0"
+              minor=$((minor + 1))
+              patch=0
               ;;
             patch)
-              new_patch=$((patch + 1))
-              new_version="v${major}.${minor}.${new_patch}"
+              patch=$((patch + 1))
               ;;
             *)
               echo "Invalid release type"
               exit 1
           esac
 
+          new_version="v${major}.${minor}.${patch}"
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "New version: $new_version"
       - name: Create new tag
