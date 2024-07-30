@@ -115,7 +115,7 @@ jobs:
           ref: ${{ env.commit_sha }}
 
   create_release_draft:
-      needs: create_executables
+      needs: [create_tag, create_executables]
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
