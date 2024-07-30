@@ -121,14 +121,9 @@ jobs:
       steps:
         - name: Checkout
           uses: actions/checkout@v4
-        - name: Build Changelog
-          uses: mikepenz/release-changelog-builder-action@v5
-          with:
-            fromTag: ${{ needs.create_tag.outputs.base_tag }}
-            toTag: ${{ needs.create_tag.outputs.new_version }}
-            fetchViaCommits: true
         - name: Release
           uses: softprops/action-gh-release@v2
           with:
-            prerelease: true
+            draft: true
             tag_name: ${{ needs.create_tag.outputs.new_version }}
+            generate_release_notes: true
