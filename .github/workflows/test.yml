@@ -11,9 +11,6 @@ on:
           - minor
           - patch
         required: true
-      commit_sha:
-        description: 'Commit SHA to tag (default: latest commit)'
-        type: string
       base_tag:
         description: 'Base tag to bump from (default: highest tag, format : x.x.x)'
         type: string
@@ -43,12 +40,8 @@ jobs:
       - name: Determine commit SHA
         id: get_commit
         run: |
-          if [ -z "${{ github.event.inputs.commit_sha }}" ]; then
             BASE_COMMIT=$(git rev-parse HEAD)
             echo "commit_sha=${BASE_COMMIT}" >> $GITHUB_ENV
-          else
-            echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
-          fi
       - name: Get base tag
         id: get_base_tag
         run: |
@@ -117,3 +110,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.commit_sha }}
+  
+  create-pre-release:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Release
+          uses: softprops/action-gh-release@v2
+          with:
+            prerelease: true
