@@ -120,10 +120,16 @@ jobs:
       steps:
         - name: Checkout
           uses: actions/checkout@v4
+        - name: Zip executables
+          run: |
+            OUTPUT_PATH="./docs"
+            ZIP_NAME="executables.zip"
+            zip -r $ZIP_NAME $OUTPUT_PATH
+            echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
         - name: Release
           uses: softprops/action-gh-release@v2
           with:
             draft: true
             tag_name: ${{ needs.create_tag.outputs.new_version }}
             generate_release_notes: true
-            files: ./docs
+            files: ${{ env.zip_name }}
