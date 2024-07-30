@@ -18,9 +18,21 @@ on:
         description: 'Base tag to bump from (default: highest tag, format : x.x.x)'
         type: string
 
+concurrency:
+  group: cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GIT_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  GO_VERSION: '1.22.x'
+  OUTPUT_PATH: './output'
+
+
 jobs:
   create_tag:
     runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.share.outputs.commit_sha }}
 
     steps:
       - name: Checkout repository
@@ -32,28 +44,26 @@ jobs:
         id: get_commit
         run: |
           if [ -z "${{ github.event.inputs.commit_sha }}" ]; then
-            LATEST_COMMIT=$(git rev-parse HEAD)
-            echo "commit_sha=${LATEST_COMMIT}" >> $GITHUB_ENV
+            BASE_COMMIT=$(git rev-parse HEAD)
+            echo "commit_sha=${BASE_COMMIT}" >> $GITHUB_ENV
           else
             echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
           fi
-
       - name: Get base tag
         id: get_base_tag
         run: |
           if [ -z "${{ github.event.inputs.base_tag }}" ]; then
-            LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
-            echo "base_tag=${LATEST_TAG}" >> $GITHUB_ENV
+            BASE_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
+            echo "base_tag=${BASE_TAG}" >> $GITHUB_ENV
           else
             echo "base_tag=${{ github.event.inputs.base_tag }}" >> $GITHUB_ENV
           fi
-
       - name: Calculate new version
         id: calculate_version
         run: |
           echo "Current version: ${{ env.base_tag }}"
           version=${{ env.base_tag }}
-          version=${version#v} # Remove leading 'v' if present
+          version=${version#v}
           major=$(echo $version | cut -d. -f1)
           minor=$(echo $version | cut -d. -f2)
           patch=$(echo $version | cut -d. -f3)
@@ -78,7 +88,6 @@ jobs:
 
           echo "new_version=${new_version}" >> $GITHUB_ENV
           echo "New version: $new_version"
-
       - name: Create new tag
         uses: actions/github-script@v6
         with:
@@ -92,3 +101,19 @@ jobs:
                   ref: `refs/tags/${newVersion}`,
                   sha: commitSha,
                 });
+
+      - name: Share SHA
+        id: share
+        run: |
+              echo "commit_sha=$commit_sha" >> $GITHUB_OUTPUT
+#code from paren (create-and-upload-executables.yml)
+  create-executables:
+    needs: create_tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: get commit sha
+        run: |
+            echo "commit_sha=${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.commit_sha }}

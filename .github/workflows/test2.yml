@@ -1,22 +1,119 @@
 name: Create Executables TEST
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        required: true
+      commit_sha:
+        description: 'Commit SHA to tag (default: latest commit)'
+        type: string
+      base_tag:
+        description: 'Base tag to bump from (default: highest tag, format : x.x.x)'
+        type: string
+
+concurrency:
+  group: cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GIT_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  GO_VERSION: '1.22.x'
+  OUTPUT_PATH: './output'
+
 
 jobs:
-  handle_tag:
+  create_tag:
     runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.share.outputs.commit_sha }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Print Tag Information
+      - name: Determine commit SHA
+        id: get_commit
         run: |
-          echo "New tag: $GITHUB_REF"
-          echo "Tag pushed to commit SHA: $GITHUB_SHA"
+          if [ -z "${{ github.event.inputs.commit_sha }}" ]; then
+            BASE_COMMIT=$(git rev-parse HEAD)
+            echo "commit_sha=${BASE_COMMIT}" >> $GITHUB_ENV
+          else
+            echo "commit_sha=${{ github.event.inputs.commit_sha }}" >> $GITHUB_ENV
+          fi
+      - name: Get base tag
+        id: get_base_tag
+        run: |
+          if [ -z "${{ github.event.inputs.base_tag }}" ]; then
+            BASE_TAG=$(git tag -l --sort=-v:refname | head -n 1 2>/dev/null || echo "v0.0.0")
+            echo "base_tag=${BASE_TAG}" >> $GITHUB_ENV
+          else
+            echo "base_tag=${{ github.event.inputs.base_tag }}" >> $GITHUB_ENV
+          fi
+      - name: Calculate new version
+        id: calculate_version
+        run: |
+          echo "Current version: ${{ env.base_tag }}"
+          version=${{ env.base_tag }}
+          version=${version#v}
+          major=$(echo $version | cut -d. -f1)
+          minor=$(echo $version | cut -d. -f2)
+          patch=$(echo $version | cut -d. -f3)
 
-      - name: Example Action Step
-        run: echo "This step runs when a new tag is pushed"
+          case ${{ github.event.inputs.release_type }} in
+            major)
+              new_major=$((major + 1))
+              new_version="v${new_major}.0.0"
+              ;;
+            minor)
+              new_minor=$((minor + 1))
+              new_version="v${major}.${new_minor}.0"
+              ;;
+            patch)
+              new_patch=$((patch + 1))
+              new_version="v${major}.${minor}.${new_patch}"
+              ;;
+            *)
+              echo "Invalid release type"
+              exit 1
+          esac
+
+          echo "new_version=${new_version}" >> $GITHUB_ENV
+          echo "New version: $new_version"
+      - name: Create new tag
+        uses: actions/github-script@v6
+        with:
+              github-token: ${{ secrets.GITHUB_TOKEN }}
+              script: |
+                const newVersion = process.env.new_version;
+                const commitSha = process.env.commit_sha;
+                github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `refs/tags/${newVersion}`,
+                  sha: commitSha,
+                });
+
+      - name: Share SHA
+        id: share
+        run: |
+              echo "commit_sha=$commit_sha" >> $GITHUB_OUTPUT
+#code from paren (create-and-upload-executables.yml)
+  create-executables:
+    needs: create_tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: get commit sha
+        run: |
+            echo "commit_sha=${{ needs.create_tag.outputs.commit_sha }}" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.commit_sha }}
