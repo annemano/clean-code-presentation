@@ -31,7 +31,6 @@ jobs:
     outputs:
       commit_sha: ${{ steps.share.outputs.commit_sha }}
       new_version: ${{ steps.share.outputs.new_version }}
-      base_tag: ${{ steps.share.outputs.base_tag }}
 
     steps:
       - name: Checkout repository
@@ -104,7 +103,7 @@ jobs:
               echo "new_version=$new_version" >> $GITHUB_OUTPUT
               echo "base_tag=$base_tag" >> $GITHUB_OUTPUT
 #code from paren (create-and-upload-executables.yml)
-  create-executables:
+  create_executables:
     needs: create_tag
     runs-on: ubuntu-latest
     steps:
@@ -115,8 +114,8 @@ jobs:
         with:
           ref: ${{ env.commit_sha }}
 
-  create-pre-release:
-      needs: create_tag
+  create_release_draft:
+      needs: create_executables
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
@@ -127,3 +126,4 @@ jobs:
             draft: true
             tag_name: ${{ needs.create_tag.outputs.new_version }}
             generate_release_notes: true
+            files: ./docs
