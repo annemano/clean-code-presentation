@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       commit_sha: ${{ steps.share.outputs.commit_sha }}
+      new_version: ${{ steps.share.outputs.new_version }}
 
     steps:
       - name: Checkout repository
@@ -95,10 +96,11 @@ jobs:
                   sha: commitSha,
                 });
 
-      - name: Share SHA
+      - name: Share SHA and Tag
         id: share
         run: |
               echo "commit_sha=$commit_sha" >> $GITHUB_OUTPUT
+              echo "new_version=$new_version" >> $GITHUB_OUTPUT
 #code from paren (create-and-upload-executables.yml)
   create-executables:
     needs: create_tag
@@ -112,6 +114,7 @@ jobs:
           ref: ${{ env.commit_sha }}
   
   create-pre-release:
+      needs: create_tag
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
@@ -120,3 +123,4 @@ jobs:
           uses: softprops/action-gh-release@v2
           with:
             prerelease: true
+            tag: ${{ needs.create_tag.outputs.new_version }}
